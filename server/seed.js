@@ -17,7 +17,7 @@ const seedData = async () => {
       console.log('Note: Could not delete existing data (may require auth)')
     }
 
-    const users = await User.insertMany([
+    const usersData = [
       {
         email: 'test@example.com',
         password: 'password123',
@@ -33,7 +33,13 @@ const seedData = async () => {
         password: 'user123',
         name: 'Regular User',
       },
-    ])
+    ]
+
+    const users = []
+    for (const userData of usersData) {
+      const user = await User.create(userData)
+      users.push(user)
+    }
 
     console.log(`Created ${users.length} users:`)
     users.forEach((user) => {
@@ -78,4 +84,3 @@ const seedData = async () => {
 }
 
 seedData()
-
