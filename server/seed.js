@@ -17,13 +17,28 @@ const seedData = async () => {
       console.log('Note: Could not delete existing data (may require auth)')
     }
 
-    const user = await User.create({
-      email: 'test@example.com',
-      password: 'password123',
-      name: 'Test User',
-    })
+    const users = await User.insertMany([
+      {
+        email: 'test@example.com',
+        password: 'password123',
+        name: 'Test User',
+      },
+      {
+        email: 'admin@example.com',
+        password: 'admin123',
+        name: 'Admin User',
+      },
+      {
+        email: 'user@example.com',
+        password: 'user123',
+        name: 'Regular User',
+      },
+    ])
 
-    console.log('Created user:', user.email)
+    console.log(`Created ${users.length} users:`)
+    users.forEach((user) => {
+      console.log(`  - ${user.email} (${user.name})`)
+    })
 
     const items = await Item.insertMany([
       {

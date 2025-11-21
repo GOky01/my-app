@@ -4,6 +4,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, h
 import { CSS } from '@dnd-kit/utilities'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { setItems, setVisibleColumns, setSearchTerm, setSortColumn, reorderColumns, Item } from '../store/slices/itemsSlice'
+import ColumnSelectorModal from '../components/ColumnSelectorModal'
 import './Items.css'
 
 const allColumns = [
@@ -40,7 +41,6 @@ export default function Items() {
   const { items, visibleColumns, searchTerm, sortColumn, sortDirection } = useAppSelector((state) => state.items)
   const { token } = useAppSelector((state) => state.auth)
   const [showColumnSelector, setShowColumnSelector] = useState(false)
-  const [selectedColumns, setSelectedColumns] = useState<string[]>(visibleColumns)
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -78,17 +78,8 @@ export default function Items() {
     dispatch(setSortColumn({ column, direction }))
   }
 
-  const handleColumnToggle = (columnKey: string) => {
-    if (selectedColumns.includes(columnKey)) {
-      setSelectedColumns(selectedColumns.filter((key) => key !== columnKey))
-    } else {
-      setSelectedColumns([...selectedColumns, columnKey])
-    }
-  }
-
-  const handleApplyColumns = () => {
-    dispatch(setVisibleColumns(selectedColumns))
-    setShowColumnSelector(false)
+  const handleApplyColumns = (newSelectedColumns: string[]) => {
+    dispatch(setVisibleColumns(newSelectedColumns))
   }
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -126,7 +117,9 @@ export default function Items() {
       }
     })
 
-  const visibleColumnConfigs = allColumns.filter((col) => visibleColumns.includes(col.key))
+  const visibleColumnConfigs = visibleColumns
+    .map((key) => allColumns.find((col) => col.key === key))
+    .filter((col): col is { key: string; label: string } => col !== undefined)
 
   return (
     <div className="items-page">
@@ -146,26 +139,14 @@ export default function Items() {
         </div>
       </div>
 
-      {showColumnSelector && (
-        <div className="column-selector">
-          <h3>Select Columns</h3>
-          <div className="column-checkboxes">
-            {allColumns.map((col) => (
-              <label key={col.key} className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={selectedColumns.includes(col.key)}
-                  onChange={() => handleColumnToggle(col.key)}
-                />
-                {col.label}
-              </label>
-            ))}
-          </div>
-          <button onClick={handleApplyColumns} className="apply-btn">
-            Apply
-          </button>
-        </div>
-      )}
+      <ColumnSelectorModal
+        key={showColumnSelector ? 'open' : 'closed'}
+        isOpen={showColumnSelector}
+        onClose={() => setShowColumnSelector(false)}
+        onApply={handleApplyColumns}
+        allColumns={allColumns}
+        selectedColumns={visibleColumns}
+      />
 
       <div className="table-container">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
